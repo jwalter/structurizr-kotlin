@@ -44,6 +44,12 @@ class WorkspaceAdapter(name: String, description: String) {
         return softwareSystem
     }
 
+    fun container(softwareSystem: SoftwareSystem, name: String, description: String, technology: String, init: ContainerAdapter.() -> Unit = {}): ContainerAdapter {
+        val c = ContainerAdapter(softwareSystem, name, description, technology)
+        c.init()
+        return c
+    }
+
     fun person(name: String, description: String, block: PersonAdapter.() -> Unit): PersonAdapter {
         val p = PersonAdapter(model, name, description)
         p.block()
@@ -63,9 +69,30 @@ class WorkspaceAdapter(name: String, description: String) {
 class PersonAdapter(model: Model, name: String, description: String? = null) {
     private val adaptee = model.addPerson(name, description)
 
-    fun uses(softwareSystem: SoftwareSystem, description: String) {
-        adaptee.uses(softwareSystem, description)
+    fun uses(softwareSystem: SoftwareSystem,
+             description: String,
+             technology: String? = null,
+             interactionStyle: InteractionStyle = InteractionStyle.Synchronous): Relationship? {
+        return adaptee.uses(softwareSystem, description, technology, interactionStyle)
     }
+
+    fun uses(containerAdapter: ContainerAdapter,
+             description: String? = null,
+             technology: String? = null,
+             interactionStyle: InteractionStyle = InteractionStyle.Synchronous): Relationship? {
+        return adaptee.uses(containerAdapter.adaptee, description, technology, interactionStyle)
+    }
+}
+
+@StructurizrDslMarker
+class ContainerAdapter(softwareSystem: SoftwareSystem, name: String, description: String, technology: String) {
+    internal val adaptee = softwareSystem.addContainer(name, description, technology)
+
+    val tags = TagAdapter(adaptee)
+}
+
+class TagAdapter(private val container: Container) {
+    operator fun plusAssign(tag: String) = container.addTags(tag)
 }
 
 @StructurizrDslMarker
