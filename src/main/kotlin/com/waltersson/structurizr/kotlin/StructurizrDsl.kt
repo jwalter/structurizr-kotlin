@@ -13,17 +13,21 @@ fun structurizr(init: StructurizrDsl.() -> Unit) = StructurizrDsl(init)
 
 @StructurizrDslMarker
 open class StructurizrDsl internal constructor(private val init: StructurizrDsl.() -> Unit) {
+    private var workspace: WorkspaceAdapter? = null
 
     fun workspace(name: String, description: String, block: WorkspaceAdapter.() -> Unit): WorkspaceAdapter {
         val w = WorkspaceAdapter(name, description)
         w.block()
+        workspace = w
         return w
     }
+
+    fun evaluate(): Workspace? = workspace?.adaptee
 }
 
 @StructurizrDslMarker
 class WorkspaceAdapter(name: String, description: String) {
-    private val adaptee = Workspace(name, description)
+    internal val adaptee = Workspace(name, description)
     val model: Model = adaptee.model
     val views: ViewSet = adaptee.views
 
